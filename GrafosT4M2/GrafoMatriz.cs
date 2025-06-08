@@ -28,6 +28,11 @@ namespace GrafosT4M2
             _arestas = new List<List<float>>();
         }
 
+        public GrafoMatriz(GrafoMatriz grafo) : base(grafo)
+        {
+            _arestas = new List<List<float>>();
+            grafo.Arestas.ForEach(ar => _arestas.Add(new List<float>(ar)));
+        }
         #endregion
 
         #region Controle vértices
@@ -104,7 +109,7 @@ namespace GrafosT4M2
 
         public override bool InserirAresta(int origem, int destino, float peso = 1)
         {
-            if (ExisteAresta(origem, destino) || peso < 1) return false; // Não insere caso já exista
+            if (ExisteAresta(origem, destino) || peso <= 0) return false; // Não insere caso já exista
 
             float val = !Ponderado ? 1 : peso;
 
@@ -141,11 +146,21 @@ namespace GrafosT4M2
             List<int> vizinhos = new List<int>();
             for (int i = 0; i < Arestas[vertice].Count; i++)
             {
-                if (Arestas[vertice][i] != 0) vizinhos.Add(i);
+                if (Arestas[vertice][i] > 0) vizinhos.Add(i);
             }
 
             return vizinhos;
         }
+        #endregion
+
+
+        #region Fluxo Maximo
+
+        public override GrafoMatriz Clonar()
+        {
+            return new GrafoMatriz(this);
+        }
+
         #endregion
     }
 }

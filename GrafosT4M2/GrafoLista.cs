@@ -23,6 +23,12 @@ namespace GrafosT4M2
             _arestas = new List<List<(int destino, float peso)>>();
         }
 
+        public GrafoLista(GrafoLista grafo) : base(grafo)
+        {
+            _arestas = new List<List<(int destino, float peso)>>();
+            grafo.Arestas.ForEach(ar => _arestas.Add(new List<(int destino, float peso)>(ar)));
+        }
+
         #endregion
 
         #region Controle vértices
@@ -129,7 +135,15 @@ namespace GrafosT4M2
 
         public override List<int> RetornarVizinhos(int vertice)
         {
-            return Arestas[vertice].Select(aresta => aresta.destino).ToList();
+            return Arestas[vertice].Where(aresta=> aresta.peso > 0).Select(aresta => aresta.destino).ToList();
+        }
+
+        #endregion
+
+        #region Fluxo Maximo
+        public override GrafoLista Clonar()
+        {
+            return new GrafoLista(this);
         }
 
         #endregion

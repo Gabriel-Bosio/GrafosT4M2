@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Security;
 using System.Text;
 using System.Threading.Channels;
@@ -41,6 +42,13 @@ namespace GrafosT4M2
             this._ponderado = ponderado;
             this._direcionado = direcionado;
             _vertices = new List<string>();
+        }
+
+        public Grafo(Grafo grafo)
+        {
+            this._ponderado = grafo.Ponderado;
+            this._direcionado = grafo.Direcionado;
+            this._vertices = new List<string>(grafo.Vertices);
         }
 
         #endregion
@@ -421,6 +429,137 @@ namespace GrafosT4M2
         }
         #endregion
 
+        #region Fluxo Máximo
 
+        public abstract Grafo Clonar();
+        public List<int> RetornarCaminhoBuscaProfundidade(int origem, int destino)
+        {
+            List<int> verticesVisitadas = new List<int>();
+
+            List<int> caminhoDestino = DefinirCaminhoBuscaProfundidade(origem, destino, ref verticesVisitadas); //Inicia a busca de forma recursiva
+
+            caminhoDestino.Reverse();
+
+            return caminhoDestino;
+        }
+
+        private List<int> DefinirCaminhoBuscaProfundidade(int origem, int destino, ref List<int> verticesVisitadas)
+        {
+            verticesVisitadas.Add(origem);
+
+            if(origem == destino)
+            {
+                List<int> caminhoFeito = new List<int>();
+                caminhoFeito.Add(origem);
+                return caminhoFeito;
+            }
+
+            List<int> vizinhos = RetornarVizinhos(origem);
+            foreach (int vizinho in vizinhos)
+            {
+                if (!verticesVisitadas.Any(v => v == vizinho))
+                {
+                    List<int> caminhoFeito = DefinirCaminhoBuscaProfundidade(vizinho, destino, ref verticesVisitadas);
+                    if (caminhoFeito.Count > 0 && caminhoFeito[0] == destino)
+                    {
+                        caminhoFeito.Add(origem);
+                        return caminhoFeito;
+                    }
+                }
+            }
+
+            return new List<int>();
+        }
+
+        public void AlteraPesoAresta(int origem, int destino, float valorSoma)
+        {
+            float peso = PesoAresta(origem, destino);
+            peso += valorSoma;
+            RemoverAresta(origem, destino);
+            InserirAresta(origem, destino, peso);
+        }
+
+        public void InverterAresta(int origem, int destino)
+        {
+            float peso = PesoAresta(origem, destino);
+            RemoverAresta(origem, destino);
+
+            if(ExisteAresta(destino, origem)) //Realiza a inversão da aresta de Destino para Origem caso exista
+            {
+                float pesoRetorno = PesoAresta(destino, origem);
+                RemoverAresta(destino, origem);
+                InserirAresta(origem, destino, pesoRetorno);
+            }
+
+            InserirAresta(destino, origem, peso);
+        }
+
+        public float ExecutarFordFulk(int origem, int sorvedor)
+        {
+            Grafo grafo = Clonar();
+            float s = 0;
+
+            List<int> caminhoSorvedor = grafo.RetornarCaminhoBuscaProfundidade(origem, sorvedor);
+
+            while(caminhoSorvedor != null)
+            {
+                float menorCapacidade = float.MaxValue;
+
+                for (int i = 0; i < caminhoSorvedor.Count - 1; i++)
+                {
+                    float PesoAtual = grafo.PesoAresta(caminhoSorvedor[i], caminhoSorvedor[i + 1]);
+
+                    if (PesoAtual < menorCapacidade)
+                    {
+                        menorCapacidade = PesoAtual;
+                    }
+                }
+
+                s += menorCapacidade;
+
+                for (int i = 0; i < caminhoSorvedor.Count - 1; i++)
+                {
+                    int ori = caminhoSorvedor[i], dest = caminhoSorvedor[i + 1];
+                    grafo.AlteraPesoAresta(ori, dest, -menorCapacidade);
+                    if (grafo.ExisteAresta(dest, ori))
+                    {
+                        grafo.AlteraPesoAresta(dest, ori, menorCapacidade);
+                    }
+                    else
+                    {
+                        grafo.InserirAresta(dest, ori, menorCapacidade);
+                    }
+                }
+
+                caminhoSorvedor = grafo.RetornarCaminhoBuscaProfundidade(origem, sorvedor);
+            }
+            return s;
+        }
+
+        public (float fmOriginal, float fmOtimizado) OtimizarFluxoMaximo(int origem, int sorvedor)
+        {
+            float sOriginal = ExecutarFordFulk(origem, sorvedor);
+            float sOtimizado = sOriginal;
+
+            for (int i = 0; i < Vertices.Count; i++)
+            {
+                List<int> Vizinhos = RetornarVizinhos(i);
+                foreach (int v in Vizinhos)
+                {
+                    Grafo solucaoVizinha = Clonar();
+
+                    solucaoVizinha.InverterAresta(i, v);
+                    float sSolucao = solucaoVizinha.ExecutarFordFulk(origem, sorvedor);
+
+                    if(sSolucao > sOtimizado)
+                    {
+                        sOtimizado = sSolucao;
+                    }
+                }
+            }
+
+            return (sOriginal, sOtimizado);
+        }
+        #endregion
     }
 }
