@@ -481,16 +481,16 @@ namespace GrafosT4M2
 
         public void InverterAresta(int origem, int destino)
         {
-            float peso = PesoAresta(origem, destino);
+            float peso = 0;
+            peso = PesoAresta(origem, destino);
             RemoverAresta(origem, destino);
-
-            if(ExisteAresta(destino, origem)) //Realiza a inversão da aresta de Destino para Origem caso exista
+            
+            if(ExisteAresta(destino, origem)) //Inverte aresta de sentido Destino -> Origem antes de termimar de inverter a anterior
             {
                 float pesoRetorno = PesoAresta(destino, origem);
                 RemoverAresta(destino, origem);
                 InserirAresta(origem, destino, pesoRetorno);
             }
-
             InserirAresta(destino, origem, peso);
         }
 
@@ -501,7 +501,7 @@ namespace GrafosT4M2
 
             List<int> caminhoSorvedor = grafo.RetornarCaminhoBuscaProfundidade(origem, sorvedor);
 
-            while(caminhoSorvedor != null)
+            while(caminhoSorvedor.Count > 0)
             {
                 float menorCapacidade = float.MaxValue;
 
@@ -536,10 +536,11 @@ namespace GrafosT4M2
             return s;
         }
 
-        public (float fmOriginal, float fmOtimizado) OtimizarFluxoMaximo(int origem, int sorvedor)
+        public (float solucaOriginal, float solucaoVizinha, int NumeroPassos) OtimizarFluxoMaximo(int origem, int sorvedor)
         {
             float sOriginal = ExecutarFordFulk(origem, sorvedor);
             float sOtimizado = sOriginal;
+            int numeroPassos = 0;
 
             for (int i = 0; i < Vertices.Count; i++)
             {
@@ -548,17 +549,36 @@ namespace GrafosT4M2
                 {
                     Grafo solucaoVizinha = Clonar();
 
-                    solucaoVizinha.InverterAresta(i, v);
-                    float sSolucao = solucaoVizinha.ExecutarFordFulk(origem, sorvedor);
-
-                    if(sSolucao > sOtimizado)
+                    if(!(ExisteAresta(v, i) && v <= i))
                     {
-                        sOtimizado = sSolucao;
+                        solucaoVizinha.InverterAresta(i, v);
+                        float sSolucao = solucaoVizinha.ExecutarFordFulk(origem, sorvedor);
+
+                        if (sSolucao > sOtimizado)
+                        {
+                            sOtimizado = sSolucao;
+                            numeroPassos ++;
+                        }
                     }
                 }
             }
 
-            return (sOriginal, sOtimizado);
+            return (sOriginal, sOtimizado, numeroPassos);
+        }
+
+        public void ImprimeResultadoFluxoMaximo((float solucaoOriginal, float solucaoVizinha, int numeroPassos) resultado)
+        {
+            Console.WriteLine("\nOtimizacao por Fluxo Máximo:\n");
+            Console.WriteLine($"Fluxo Máximo via Ford-Fulkerson -- S = {resultado.solucaoOriginal}");
+            if (resultado.solucaoVizinha > resultado.solucaoOriginal)
+            {
+                Console.WriteLine($"Otimizacao via soluções vizinhas -- S = {resultado.solucaoVizinha} ( Ganho de capacidade = {resultado.solucaoVizinha - resultado.solucaoOriginal})");
+                Console.WriteLine($"Numero de passos que resultaram em otimização -- {resultado.numeroPassos} passos");
+            }
+            else
+            {
+                Console.WriteLine("Otimizacao via soluções vizinhas -- Não ouve otimização");
+            }
         }
         #endregion
     }

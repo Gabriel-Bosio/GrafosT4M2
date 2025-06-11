@@ -8,12 +8,12 @@ internal class Program
         GrafoLista grafoL = null;
 
         //LeitorGrafo leitor = new LeitorGrafo(".\\..\\..\\..\\grafo.txt");
-        LeitorGrafo leitor = new LeitorGrafo(".\\..\\..\\..\\C4000-260-X.txt");
+        LeitorGrafo leitor = new LeitorGrafo(".\\..\\..\\..\\grafo.txt");
         int origem = 0;
 
-        //leitor.GeraGrafo(ref grafoM);
+        leitor.GeraGrafo(ref grafoM);
 
-        //grafoM.ImprimeGrafo();
+        grafoM.ImprimeGrafo();
 
         ////grafoM.ImprimeBusca(grafoM.RetornarBuscaProfundidade(origem), false);
 
@@ -29,12 +29,13 @@ internal class Program
 
         //grafoM.ImprimeColoracao(grafoM.ColoracaoSemCriterio(), 3);
 
+        grafoM.ImprimeResultadoFluxoMaximo(grafoM.OtimizarFluxoMaximo(0, 5));
 
-        //Console.WriteLine("\n\n\n\n");
+        Console.WriteLine("\n\n\n\n");
 
         leitor.GeraGrafo(ref grafoL);
 
-       // grafoL.ImprimeGrafo();
+        grafoL.ImprimeGrafo();
 
         //grafoL.ImprimeBusca(grafoL.RetornarBuscaProfundidade(origem), false);
 
@@ -44,11 +45,13 @@ internal class Program
 
         //grafoL.ImprimeColoracao(grafoL.ColoracaoForcaBruta());
 
-        grafoL.ImprimeColoracao(grafoL.ColoracaoWelshPowell(), 1);
+        //grafoL.ImprimeColoracao(grafoL.ColoracaoWelshPowell(), 1);
 
         //grafoL.ImprimeColoracao(grafoL.ColoracaoDsatur(), 2);
 
-        grafoL.ImprimeColoracao(grafoL.ColoracaoSemCriterio(), 3);
+        //grafoL.ImprimeColoracao(grafoL.ColoracaoSemCriterio(), 3);
+
+        grafoL.ImprimeResultadoFluxoMaximo(grafoL.OtimizarFluxoMaximo(0, 5));
 
         Console.WriteLine("\n\n\n\n");
     }
